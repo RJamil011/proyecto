@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Viabilidad Minera</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-image: url('foto-mineria-scaled.jpeg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: white;
+        }
+
+        h1, h2 {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            display: block;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            font-weight: bold;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        form {
+            margin: 30px auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: black;
+        }
+
+        .result p {
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+
+            form {
+                width: 90%;
+            }
+
+            h1, h2 {
+                font-size: 18px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculadora de Viabilidad Minera</h1>
+    <h2>Flujograma Completo</h2>
+
+    <!-- Paso 1: Recopilación de Datos -->
+    <form id="miningForm">
+        <h3>Paso 1: Recopilación de Datos Iniciales</h3>
+        <label for="ley">Ley (%):</label>
+        <input type="number" id="ley" step="any" required>
+
+        <label for="recuperacion">Recuperación (%):</label>
+        <input type="number" id="recuperacion" step="any" required>
+
+        <label for="tonelajeDiario">Tonelaje Diario (toneladas/día):</label>
+        <input type="number" id="tonelajeDiario" step="any" required>
+
+        <label for="costosExtraccion">Costos de Extracción (USD/tonelada):</label>
+        <input type="number" id="costosExtraccion" step="any" required>
+
+        <label for="costosPlanta">Costos de Planta (USD/tonelada):</label>
+        <input type="number" id="costosPlanta" step="any" required>
+
+        <label for="costoMaquinaria">Costo de Maquinaria (USD/año):</label>
+        <input type="number" id="costoMaquinaria" step="any" required>
+
+        <label for="costoMantenimiento">Costo de Mantenimiento (USD/año):</label>
+        <input type="number" id="costoMantenimiento" step="any" required>
+
+        <label for="costosOperativos">Costos Operativos (USD/año):</label>
+        <input type="number" id="costosOperativos" step="any" required>
+
+        <h3>Paso 2.1: Selección de Mineral</h3>
+        <label for="mineral">Mineral:</label>
+        <select id="mineral" onchange="actualizarPrecio()">
+            <option value="">Seleccione un mineral</option>
+            <option value="Oro">Oro</option>
+            <option value="Plata">Plata</option>
+            <option value="Cobre">Cobre</option>
+            <option value="Hierro">Hierro</option>
+        </select>
+
+        <label for="precioMineral">Precio del Mineral (USD/tonelada):</label>
+        <input type="number" id="precioMineral" step="any" readonly>
+
+        <h3>Paso 2.2: Cálculo de Ley de Corte</h3>
+        <label for="stripRatio">Strip Ratio (s):</label>
+        <input type="number" id="stripRatio" step="any" required>
+
+        <label for="costoMinado">Costo de Minado por Tonelada (Mo):</label>
+        <input type="number" id="costoMinado" step="any" required>
+
+        <label for="costoProcesamiento">Costo de Procesamiento (Po):</label>
+        <input type="number" id="costoProcesamiento" step="any" required>
+
+        <label for="costosGenerales">Costos Generales (Oo):</label>
+        <input type="number" id="costosGenerales" step="any" required>
+
+        <label for="costosRefinamiento">Costos de Refinamiento y Transporte (R):</label>
+        <input type="number" id="costosRefinamiento" step="any" required>
+
+        <button type="button" onclick="calcularViabilidad()">Calcular Viabilidad</button>
+    </form>
+
+    <div class="result" id="result" style="display: none;">
+        <h3>Resultados del Proyecto</h3>
+        <p><strong>Ley de Corte:</strong> <span id="leyCorte"></span></p>
+        <p><strong>Ingresos Anuales:</strong> <span id="ingresosAnuales"></span> USD</p>
+        <p><strong>Costos Totales:</strong> <span id="costosTotales"></span> USD</p>
+        <p><strong>VPN:</strong> <span id="vpn"></span> USD</p>
+        <p><strong>Decisión:</strong> <span id="decision"></span></p>
+    </div>
+
+    <script>
+        const preciosMinerales = {
+            "Oro": 86807.1,
+            "Plata": 1052.83,
+            "Cobre": 9400,
+            "Hierro": 120
+        };
+
+        function actualizarPrecio() {
+            const mineral = document.getElementById('mineral').value;
+            document.getElementById('precioMineral').value = mineral ? preciosMinerales[mineral].toFixed(2) : "";
+        }
+
+        function calcularViabilidad() {
+            const ley = parseFloat(document.getElementById('ley').value) / 100;
+            const recuperacion = parseFloat(document.getElementById('recuperacion').value) / 100;
+            const tonelajeDiario = parseFloat(document.getElementById('tonelajeDiario').value);
+            const costosExtraccion = parseFloat(document.getElementById('costosExtraccion').value);
+            const costosPlanta = parseFloat(document.getElementById('costosPlanta').value);
+            const costoMaquinaria = parseFloat(document.getElementById('costoMaquinaria').value);
+            const costoMantenimiento = parseFloat(document.getElementById('costoMantenimiento').value);
+            const costosOperativos = parseFloat(document.getElementById('costosOperativos').value);
+            const stripRatio = parseFloat(document.getElementById('stripRatio').value);
+            const costoMinado = parseFloat(document.getElementById('costoMinado').value);
+            const costoProcesamiento = parseFloat(document.getElementById('costoProcesamiento').value);
+            const costosGenerales = parseFloat(document.getElementById('costosGenerales').value);
+            const costosRefinamiento = parseFloat(document.getElementById('costosRefinamiento').value);
+            const precioMineral = parseFloat(document.getElementById('precioMineral').value);
+
+            if (isNaN(precioMineral) || !stripRatio) {
+                alert('Por favor, seleccione un mineral y complete todos los campos.');
+                return;
+            }
+
+            const leyCorte = ((stripRatio * costoMinado) + costoProcesamiento + costosGenerales) / (recuperacion * (precioMineral - costosRefinamiento));
+            const tonelajeAnual = tonelajeDiario * 365;
+            const ingresosAnuales = precioMineral * ley * recuperacion * tonelajeAnual;
+            const costosTotales = (costosExtraccion * tonelajeAnual) + (costosPlanta * tonelajeAnual) + costoMaquinaria + costoMantenimiento + costosOperativos;
+            const vpn = ingresosAnuales - costosTotales;
+
+            document.getElementById('leyCorte').textContent = leyCorte.toFixed(2);
+            document.getElementById('ingresosAnuales').textContent = ingresosAnuales.toFixed(2);
+            document.getElementById('costosTotales').textContent = costosTotales.toFixed(2);
+            document.getElementById('vpn').textContent = vpn.toFixed(2);
+            document.getElementById('decision').textContent = vpn > 0 ? 'Proyecto Viable' : 'Proyecto No Viable';
+            document.getElementById('result').style.display = 'block';
+        }
+
+        actualizarPrecio();
+    </script>
+</body>
+</html>
